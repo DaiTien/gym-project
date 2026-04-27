@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── AUTH ────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  weightKg     Float?
+  goalWeightKg Float?
+  createdAt    DateTime @default(now())
+
+  userPrograms   UserProgram[]
+  bodyWeights    BodyWeight[]
+  dailyLifestyle DailyLifestyle[]
+}
+
+// ─── PROGRAM (TEMPLATE) ───────────────────────────────────────────────────────
+
+model Program {
+  id            String  @id @default(uuid())
+  name          String
+  durationWeeks Int
+  description   String?
+
+  days         ProgramDay[]
+  userPrograms UserProgram[]
+}
+
+model ProgramDay {
+  id            String      @id @default(uuid())
+  programId     String
+  dayOfWeek     Int         // 1=Mon … 7=Sun
+  label         String      // "Thân Trên 1"
+  type          DayType
+  circuitRounds Int         @default(3)
+
+  program      Program       @relation(fields: [programId], references: [id])
+  dayExercises DayExercise[]
+  sessions     WorkoutSession[]
+}
+
+enum DayType {
+  workout
+  active_recovery
+  rest
+}
+
+model Exercise {
+  id          String  @id @default(uuid())
+  name        String
+  nameVi      String
+  muscleGroup String?
+
+  dayExercises DayExercise[]
+  sessionSets  SessionSet[]
+}
+
+model DayExercise {
+  id            String  @id @default(uuid())
+  programDayId  String
+  exerciseId    String
+  orderIndex    Int
+  isFinisher    Boolean @default(false)
+  finisherPair  String? // "A" hoặc "B"
+
+  programDay  ProgramDay @relation(fields: [programDayId], references: [id])
+  exercise    Exercise   @relation(fields: [exerciseId], references: [id])
+
+  // progression rules nhúng thẳng vào đây
+  week12Reps  Int?    // reps target tuần 1-2
+  week34Reps  Int?    // reps target tuần 3-4
+  notes       String?
+}
+
+// ─── USER PROGRAM (CHU KỲ) ───────────────────────────────────────────────────
+
+model UserProgram {
+  id           String            @id @default(uuid())
+  userId       String
+  programId    String
+  cycleNumber  Int               @default(1)
+  startDate    DateTime
+  status       UserProgramStatus @default(active)
+
+  user     User     @relation(fields: [userId], references: [id])
+  program  Program  @relation(fields: [programId], references: [id])
+  sessions WorkoutSession[]
+}
+
+enum UserProgramStatus {
+  active
+  deload
+  completed
+}
+
+// ─── SESSION ─────────────────────────────────────────────────────────────────
+
+model WorkoutSession {
+  id            String    @id @default(uuid())
+  userProgramId String
+  programDayId  String
+  weekNumber    Int       // 1..4
+  sessionDate   DateTime  @db.Date
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  notes         String?
+
+  userProgram UserProgram @relation(fields: [userProgramId], references: [id])
+  programDay  ProgramDay  @relation(fields: [programDayId], references: [id])
+  sets        SessionSet[]
+}
+
+model SessionSet {
+  id            String   @id @default(uuid())
+  sessionId     String
+  exerciseId    String
+  circuitRound  Int      // 1, 2, 3
+  setIndex      Int
+  repsDone      Int?
+  weightKg      Float?
+  durationSec   Int?     // dành cho finisher tính giây
+
+  session  WorkoutSession @relation(fields: [sessionId], references: [id])
+  exercise Exercise       @relation(fields: [exerciseId], references: [id])
+}
+
+// ─── PROGRESS & LIFESTYLE ─────────────────────────────────────────────────────
+
+model BodyWeight {
+  id           String   @id @default(uuid())
+  userId       String
+  recordedDate DateTime @db.Date
+  weightKg     Float
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, recordedDate])
+}
+
+model DailyLifestyle {
+  id        String   @id @default(uuid())
+  userId    String
+  logDate   DateTime @db.Date
+  steps     Int?
+  sleepHours Float?
+  caloriesIn Int?
+  proteinG   Int?
+  notes     String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, logDate])
+}
