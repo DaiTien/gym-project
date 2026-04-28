@@ -3,7 +3,70 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
+
+  html {
+    /* Tránh bounce scroll trên iOS */
+    overscroll-behavior: none;
+  }
+
   body {
     @apply bg-slate-900 text-white font-sans;
+    /* Không cho text select khi bấm nhanh trên mobile */
+    -webkit-user-select: none;
+    user-select: none;
+    /* Safe area cho notch/home bar */
+    padding-top: var(--safe-top);
+  }
+
+  /* Chỉ cho phép select trong input/textarea */
+  input, textarea {
+    @apply bg-slate-700 text-white placeholder-slate-400;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Smooth scroll */
+  html { scroll-behavior: smooth; }
+}
+
+@layer components {
+  .input {
+    @apply w-full bg-slate-700 text-white placeholder-slate-400 rounded-xl px-4 py-3
+           focus:outline-none focus:ring-2 focus:ring-brand transition-shadow;
+  }
+
+  /* Bottom nav tính thêm safe area (home bar iPhone) */
+  .bottom-nav {
+    padding-bottom: calc(0.75rem + var(--safe-bottom));
+  }
+
+  /* Skeleton loading pulse */
+  .skeleton {
+    @apply bg-slate-700 rounded-xl animate-pulse;
+  }
+
+  /* Card chuẩn */
+  .card {
+    @apply bg-slate-800 rounded-2xl border border-slate-700 p-4;
+  }
+
+  /* Button chuẩn */
+  .btn-primary {
+    @apply bg-brand text-white font-black py-3 px-6 rounded-xl
+           active:scale-95 transition-transform disabled:opacity-50 disabled:scale-100;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-700 text-white font-bold py-3 px-6 rounded-xl
+           active:scale-95 transition-transform disabled:opacity-50;
   }
 }

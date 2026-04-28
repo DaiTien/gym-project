@@ -1,18 +1,29 @@
+import 'dotenv/config'
+import './lib/env'   // fail fast nếu thiếu env
 import Fastify from 'fastify'
 import fastifyJwt from '@fastify/jwt'
 import fastifyCors from '@fastify/cors'
 import { authRoutes } from './modules/auth/auth.routes'
+import { programRoutes } from './modules/programs/programs.routes'
+import { userProgramRoutes } from './modules/programs/user-programs.routes'
+import { sessionRoutes } from './modules/sessions/sessions.routes'
+import { progressRoutes } from './modules/progress/progress.routes'
+import { lifestyleRoutes } from './modules/lifestyle/lifestyle.routes'
 
-const app = Fastify({ logger: true })
+const app = Fastify({ logger: { level: 'warn' } })
 
 // ─── PLUGINS ─────────────────────────────────────────────────────────────────
-app.register(fastifyCors, { origin: true })
-
-app.register(fastifyJwt, {
-  secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
+const isProd = process.env.NODE_ENV === 'production'
+app.register(fastifyCors, {
+  origin: isProd
+    ? (process.env.FRONTEND_URL ?? false)
+    : true,
 })
 
-// Decorator để protect routes
+app.register(fastifyJwt, {
+  secret: process.env.JWT_SECRET!,
+})
+
 app.decorate('authenticate', async function (req: any, reply: any) {
   try {
     await req.jwtVerify()
@@ -22,7 +33,12 @@ app.decorate('authenticate', async function (req: any, reply: any) {
 })
 
 // ─── ROUTES ──────────────────────────────────────────────────────────────────
-app.register(authRoutes, { prefix: '/api/auth' })
+app.register(authRoutes,        { prefix: '/api/auth' })
+app.register(programRoutes,     { prefix: '/api/programs' })
+app.register(userProgramRoutes, { prefix: '/api/user-programs' })
+app.register(sessionRoutes,     { prefix: '/api/sessions' })
+app.register(progressRoutes,    { prefix: '/api/progress' })
+app.register(lifestyleRoutes,   { prefix: '/api/lifestyle' })
 
 app.get('/health', async () => ({ status: 'ok' }))
 
@@ -31,7 +47,7 @@ const start = async () => {
   try {
     const port = Number(process.env.PORT) || 3001
     await app.listen({ port, host: '0.0.0.0' })
-    console.log(`Server running on http://localhost:${port}`)
+    console.log(`✓ Server running on http://localhost:${port}`)
   } catch (err) {
     app.log.error(err)
     process.exit(1)

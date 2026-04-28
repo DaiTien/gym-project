@@ -1,4 +1,8 @@
-const BASE = '/api'
+// Dev: proxy qua Vite (/api → localhost:3001)
+// Prod: dùng VITE_API_URL từ env
+const BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api'
 
 function getToken() {
   return localStorage.getItem('token')
@@ -20,8 +24,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  get:    <T>(path: string)                       => request<T>(path),
-  post:   <T>(path: string, body: unknown)        => request<T>(path, { method: 'POST',  body: JSON.stringify(body) }),
-  patch:  <T>(path: string, body: unknown)        => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
-  delete: <T>(path: string)                       => request<T>(path, { method: 'DELETE' }),
+  get:    <T>(path: string)                => request<T>(path),
+  post:   <T>(path: string, body: unknown) => request<T>(path, { method: 'POST',   body: JSON.stringify(body) }),
+  patch:  <T>(path: string, body: unknown) => request<T>(path, { method: 'PATCH',  body: JSON.stringify(body) }),
+  delete: <T>(path: string)               => request<T>(path, { method: 'DELETE' }),
 }

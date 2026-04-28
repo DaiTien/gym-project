@@ -21,7 +21,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
           <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-          <Route path="/session/:dayId" element={<PrivateRoute><WorkoutSession /></PrivateRoute>} />
+          <Route path="/session/:id" element={<PrivateRoute><WorkoutSession /></PrivateRoute>} />
           <Route path="/progress" element={<PrivateRoute><Progress /></PrivateRoute>} />
           <Route path="/lifestyle" element={<PrivateRoute><Lifestyle /></PrivateRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
