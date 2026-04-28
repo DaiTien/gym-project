@@ -16,8 +16,19 @@ const app = Fastify({ logger: { level: 'warn' } })
 const isProd = process.env.NODE_ENV === 'production'
 app.register(fastifyCors, {
   origin: isProd
-    ? (process.env.FRONTEND_URL ?? false)
+    ? (origin, cb) => {
+        const allowed = [
+          /\.vercel\.app$/,
+          /localhost/,
+          ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+        ]
+        const ok = !origin || allowed.some((p) =>
+          typeof p === 'string' ? p === origin : p.test(origin)
+        )
+        cb(null, ok)
+      }
     : true,
+  credentials: true,
 })
 
 app.register(fastifyJwt, {
