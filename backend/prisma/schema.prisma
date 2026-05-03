@@ -20,6 +20,8 @@ model User {
   userPrograms   UserProgram[]
   bodyWeights    BodyWeight[]
   dailyLifestyle DailyLifestyle[]
+  exercises      Exercise[]
+  programDays    ProgramDay[]
 }
 
 // ─── PROGRAM (TEMPLATE) ───────────────────────────────────────────────────────
@@ -35,16 +37,20 @@ model Program {
 }
 
 model ProgramDay {
-  id            String      @id @default(uuid())
+  id            String   @id @default(uuid())
   programId     String
-  dayOfWeek     Int         // 1=Mon … 7=Sun
-  label         String      // "Thân Trên 1"
+  dayOfWeek     Int      @default(1)
+  label         String
   type          DayType
-  circuitRounds Int         @default(3)
+  circuitRounds Int      @default(3)
+  // null = global template, có userId = nhóm riêng của user
+  userId        String?
 
   program      Program       @relation(fields: [programId], references: [id])
+  user         User?         @relation(fields: [userId], references: [id])
   dayExercises DayExercise[]
   sessions     WorkoutSession[]
+  schedules    UserProgramSchedule[]
 }
 
 enum DayType {
@@ -58,7 +64,11 @@ model Exercise {
   name        String
   nameVi      String
   muscleGroup String?
+  imageUrl    String?
+  // null = bài tập global (template), có userId = bài tập riêng của user
+  userId      String?
 
+  user         User?         @relation(fields: [userId], references: [id])
   dayExercises DayExercise[]
   sessionSets  SessionSet[]
 }
@@ -90,9 +100,24 @@ model UserProgram {
   startDate    DateTime
   status       UserProgramStatus @default(active)
 
-  user     User     @relation(fields: [userId], references: [id])
-  program  Program  @relation(fields: [programId], references: [id])
-  sessions WorkoutSession[]
+  user      User                  @relation(fields: [userId], references: [id])
+  program   Program               @relation(fields: [programId], references: [id])
+  sessions  WorkoutSession[]
+  schedule  UserProgramSchedule[]
+}
+
+// Lịch tập do user tự chọn: slot (1..N) → programDayId
+// Mỗi slot tương ứng 1 ngày trong tuần thực tế
+model UserProgramSchedule {
+  id            String  @id @default(uuid())
+  userProgramId String
+  dayOfWeek     Int     // 1=Mon … 7=Sun (ngày thực tế user chọn)
+  programDayId  String  // buổi tập nào được gán vào ngày đó
+
+  userProgram UserProgram @relation(fields: [userProgramId], references: [id])
+  programDay  ProgramDay  @relation(fields: [programDayId], references: [id])
+
+  @@unique([userProgramId, dayOfWeek])
 }
 
 enum UserProgramStatus {

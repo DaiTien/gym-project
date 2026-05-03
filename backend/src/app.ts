@@ -6,6 +6,8 @@ import fastifyCors from '@fastify/cors'
 import { authRoutes } from './modules/auth/auth.routes'
 import { programRoutes } from './modules/programs/programs.routes'
 import { userProgramRoutes } from './modules/programs/user-programs.routes'
+import { exerciseRoutes } from './modules/programs/exercises.routes'
+import { workoutGroupRoutes } from './modules/programs/workout-groups.routes'
 import { sessionRoutes } from './modules/sessions/sessions.routes'
 import { progressRoutes } from './modules/progress/progress.routes'
 import { lifestyleRoutes } from './modules/lifestyle/lifestyle.routes'
@@ -47,6 +49,8 @@ app.decorate('authenticate', async function (req: any, reply: any) {
 app.register(authRoutes,        { prefix: '/api/auth' })
 app.register(programRoutes,     { prefix: '/api/programs' })
 app.register(userProgramRoutes, { prefix: '/api/user-programs' })
+app.register(exerciseRoutes,    { prefix: '/api/exercises' })
+app.register(workoutGroupRoutes, { prefix: '/api/workout-groups' })
 app.register(sessionRoutes,     { prefix: '/api/sessions' })
 app.register(progressRoutes,    { prefix: '/api/progress' })
 app.register(lifestyleRoutes,   { prefix: '/api/lifestyle' })

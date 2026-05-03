@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Progress from './pages/Progress'
 import Lifestyle from './pages/Lifestyle'
 import WorkoutSession from './pages/WorkoutSession'
+import Exercises from './pages/Exercises'
 import BottomNav from './components/BottomNav'
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -17,13 +18,14 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="max-w-md mx-auto min-h-screen flex flex-col">
+      <div className="max-w-md mx-auto flex flex-col" style={{ height: '100dvh' }}>
         <Routes>
           <Route path="/login" element={token ? <Navigate to="/" replace /> : <Login />} />
           <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/session/:id" element={<PrivateRoute><WorkoutSession /></PrivateRoute>} />
           <Route path="/progress" element={<PrivateRoute><Progress /></PrivateRoute>} />
           <Route path="/lifestyle" element={<PrivateRoute><Lifestyle /></PrivateRoute>} />
+          <Route path="/exercises" element={<PrivateRoute><Exercises /></PrivateRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         {token && <BottomNav />}

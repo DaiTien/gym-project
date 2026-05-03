@@ -1,14 +1,15 @@
 import { NavLink } from 'react-router-dom'
 
 const links = [
-  { to: '/',          label: 'Home',     icon: '🏠' },
-  { to: '/progress',  label: 'Tiến độ',  icon: '📈' },
-  { to: '/lifestyle', label: 'Lối sống', icon: '👟' },
+  { to: '/',           label: 'Home',     icon: '🏠' },
+  { to: '/progress',   label: 'Tiến độ',  icon: '📈' },
+  { to: '/lifestyle',  label: 'Lối sống', icon: '👟' },
+  { to: '/exercises',  label: 'Bài tập',  icon: '💪' },
 ]
 
 export default function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-slate-800/95 backdrop-blur border-t border-slate-700 flex bottom-nav z-50">
+    <nav className="flex-shrink-0 w-full bg-slate-800/95 backdrop-blur border-t border-slate-700 flex bottom-nav z-50">
       {links.map((l) => (
         <NavLink
           key={l.to}

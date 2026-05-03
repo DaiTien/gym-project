@@ -63,7 +63,7 @@ export default function Lifestyle() {
   })
 
   return (
-    <div className="flex-1 p-4 pb-24 space-y-4">
+    <div className="flex-1 overflow-y-auto p-4 pb-6 space-y-4">
       {toastNode}
       <div className="flex justify-between items-center pt-2">
         <h2 className="text-xl font-black">Lối Sống</h2>

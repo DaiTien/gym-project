@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { sessionsApi } from '../api/sessions'
+import { exercisesApi } from '../api/programs'
 import type { DayExercise } from '../api/programs'
+import ExerciseImage from '../components/ExerciseImage'
 
 export default function WorkoutSession() {
   const { id } = useParams<{ id: string }>()
@@ -21,6 +23,19 @@ export default function WorkoutSession() {
     enabled: !!id,
     retry: 1,
   })
+
+  // Lấy danh sách exercises mới nhất để merge imageUrl
+  const { data: allExercises = [] } = useQuery({
+    queryKey: ['exercises'],
+    queryFn: exercisesApi.list,
+  })
+
+  // Merge imageUrl mới nhất vào dayExercises
+  const enriched = (dayExercises: DayExercise[]) =>
+    dayExercises.map((de) => {
+      const latest = allExercises.find((e) => e.id === de.exerciseId)
+      return latest ? { ...de, exercise: { ...de.exercise, imageUrl: latest.imageUrl } } : de
+    })
 
   // Tự chuyển sang finisher khi xong circuit
   useEffect(() => {
@@ -69,8 +84,9 @@ export default function WorkoutSession() {
     )
   }
 
-  const mainExercises = session.programDay.dayExercises.filter((e) => !e.isFinisher)
-  const finisherExercises = session.programDay.dayExercises.filter((e) => e.isFinisher)
+  const allDayExercises = enriched(session.programDay.dayExercises)
+  const mainExercises = allDayExercises.filter((e) => !e.isFinisher)
+  const finisherExercises = allDayExercises.filter((e) => e.isFinisher)
   const totalRounds = session.programDay.circuitRounds
   const weekNum = session.weekNumber
 
@@ -115,9 +131,9 @@ export default function WorkoutSession() {
   }
 
   return (
-    <div className="flex-1 flex flex-col pb-6">
-      {/* Header */}
-      <div className="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center gap-3">
+    <div className="flex-1 flex flex-col min-h-0">
+      {/* Header — cố định */}
+      <div className="flex-shrink-0 bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center gap-3">
         <button onClick={() => navigate('/')} className="text-slate-400 text-xl">←</button>
         <div className="flex-1">
           <p className="font-black text-sm truncate">{session.programDay.label}</p>
@@ -125,18 +141,18 @@ export default function WorkoutSession() {
         </div>
       </div>
 
-      {/* Round dots */}
-      <div className="flex justify-center gap-2 py-3">
+      {/* Round dots — cố định */}
+      <div className="flex-shrink-0 flex justify-center gap-2 py-3">
         {Array.from({ length: totalRounds }).map((_, i) => (
           <div
             key={i}
-            className={`w-2.5 h-2.5 rounded-full transition-colors ${i < currentRound ? 'bg-brand' : i === currentRound - 1 ? 'bg-brand' : 'bg-slate-700'}`}
+            className={`w-2.5 h-2.5 rounded-full transition-colors ${i === currentRound - 1 ? 'bg-brand' : i < currentRound - 1 ? 'bg-brand/50' : 'bg-slate-700'}`}
           />
         ))}
       </div>
 
-      {/* Exercise list (mini nav) */}
-      <div className="flex gap-2 px-4 mb-4 overflow-x-auto pb-1">
+      {/* Exercise nav — cố định */}
+      <div className="flex-shrink-0 flex gap-2 px-4 mb-2 overflow-x-auto pb-1">
         {mainExercises.map((ex, idx) => (
           <button
             key={ex.id}
@@ -148,8 +164,8 @@ export default function WorkoutSession() {
         ))}
       </div>
 
-      {/* Current exercise */}
-      <div className="flex-1 px-4">
+      {/* Content scroll — tự co giãn, không tràn xuống BottomNav */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
         {currentEx && (
           <ExerciseLogger
             key={`${currentEx.id}-${currentRound}`}
@@ -198,11 +214,11 @@ export default function WorkoutSession() {
         </div>
       </div>
 
-      {/* Next button */}
-      <div className="px-4 mt-4">
+      {/* Next button — cố định, không bị BottomNav che */}
+      <div className="flex-shrink-0 px-4 py-3 border-t border-slate-800 bg-slate-900">
         <button
           onClick={goNext}
-          className="w-full bg-brand text-white font-black py-4 rounded-xl text-base"
+          className="w-full bg-brand text-white font-black py-4 rounded-xl text-base active:scale-95 transition-transform"
         >
           {currentExIdx < mainExercises.length - 1
             ? `Bài tiếp theo →`
@@ -236,13 +252,21 @@ function ExerciseLogger({
 
   return (
     <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700">
-      <h3 className="font-black text-lg">{dayExercise.exercise.name}</h3>
-      <p className="text-slate-400 text-sm mb-1">{dayExercise.exercise.nameVi}</p>
-      {dayExercise.notes && (
-        <p className="text-xs text-brand mb-3">📌 {dayExercise.notes}</p>
-      )}
-
-      <p className="text-xs text-slate-500 mb-3">Mục tiêu: {targetReps} reps</p>
+      <div className="flex gap-3 mb-3">
+        <ExerciseImage
+          exerciseId={dayExercise.exerciseId}
+          imageUrl={dayExercise.exercise.imageUrl}
+          name={dayExercise.exercise.name}
+          size="md"
+          editable={true}
+        />
+        <div>
+          <h3 className="font-black text-lg leading-tight">{dayExercise.exercise.name}</h3>
+          <p className="text-slate-400 text-sm">{dayExercise.exercise.nameVi}</p>
+          {dayExercise.notes && <p className="text-xs text-brand mt-0.5">📌 {dayExercise.notes}</p>}
+          <p className="text-xs text-slate-500 mt-1">Mục tiêu: {targetReps} reps</p>
+        </div>
+      </div>
 
       {/* Set history */}
       {existingSets.length > 0 && (
