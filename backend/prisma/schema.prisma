@@ -13,9 +13,12 @@ model User {
   email        String   @unique
   name         String
   passwordHash String
-  weightKg     Float?
-  goalWeightKg Float?
-  createdAt    DateTime @default(now())
+  weightKg      Float?
+  goalWeightKg  Float?
+  heightCm      Float?
+  age           Int?
+  activityLevel String?  // sedentary | light | moderate | active
+  createdAt     DateTime @default(now())
 
   userPrograms   UserProgram[]
   bodyWeights    BodyWeight[]

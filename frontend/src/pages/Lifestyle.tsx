@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { lifestyleApi } from '../api/progress'
 import { useToast } from '../components/Toast'
+import TdeeCalculator from '../components/TdeeCalculator'
 
 const STEP_GOAL = 7000
 const PROTEIN_GOAL = 120
@@ -69,6 +70,9 @@ export default function Lifestyle() {
         <h2 className="text-xl font-black">Lối Sống</h2>
         <p className="text-slate-400 text-xs capitalize">{todayLabel}</p>
       </div>
+
+      {/* TDEE Calculator */}
+      <TdeeCalculator />
 
       {/* Progress rings hôm nay */}
       <div className="grid grid-cols-2 gap-3">

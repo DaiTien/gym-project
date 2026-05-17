@@ -26,6 +26,28 @@ export async function loginUser(email: string, password: string) {
 export async function getUserById(id: string) {
   return prisma.user.findUnique({
     where: { id },
-    select: { id: true, email: true, name: true, weightKg: true, goalWeightKg: true },
+    select: {
+      id: true, email: true, name: true,
+      weightKg: true, goalWeightKg: true,
+      heightCm: true, age: true, activityLevel: true,
+    },
+  })
+}
+
+export async function updateProfile(id: string, data: {
+  weightKg?: number
+  goalWeightKg?: number
+  heightCm?: number
+  age?: number
+  activityLevel?: string
+}) {
+  return prisma.user.update({
+    where: { id },
+    data,
+    select: {
+      id: true, email: true, name: true,
+      weightKg: true, goalWeightKg: true,
+      heightCm: true, age: true, activityLevel: true,
+    },
   })
 }

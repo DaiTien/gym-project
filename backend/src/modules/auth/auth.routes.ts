@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { registerUser, loginUser, getUserById } from './auth.service'
+import { registerUser, loginUser, getUserById, updateProfile } from './auth.service'
 
 export async function authRoutes(app: FastifyInstance) {
   app.post('/register', {
@@ -53,4 +53,14 @@ export async function authRoutes(app: FastifyInstance) {
     if (!user) return reply.code(404).send({ error: 'User not found' })
     return reply.send(user)
   })
+
+  app.patch<{ Body: { weightKg?: number; goalWeightKg?: number; heightCm?: number; age?: number; activityLevel?: string } }>(
+    '/profile',
+    { preHandler: [app.authenticate] },
+    async (req, reply) => {
+      const { id } = req.user as { id: string }
+      const user = await updateProfile(id, req.body)
+      return reply.send(user)
+    }
+  )
 }

@@ -1,5 +1,22 @@
 import { api } from './client'
 
+export interface UserProfile {
+  id: string
+  email: string
+  name: string
+  weightKg: number | null
+  goalWeightKg: number | null
+  heightCm: number | null
+  age: number | null
+  activityLevel: string | null
+}
+
+export const profileApi = {
+  get: () => api.get<UserProfile>('/auth/me'),
+  update: (data: Partial<Pick<UserProfile, 'weightKg' | 'goalWeightKg' | 'heightCm' | 'age' | 'activityLevel'>>) =>
+    api.patch<UserProfile>('/auth/profile', data),
+}
+
 export interface BodyWeight {
   id: string
   recordedDate: string

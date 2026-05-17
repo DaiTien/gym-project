@@ -11,6 +11,7 @@ import { workoutGroupRoutes } from './modules/programs/workout-groups.routes'
 import { sessionRoutes } from './modules/sessions/sessions.routes'
 import { progressRoutes } from './modules/progress/progress.routes'
 import { lifestyleRoutes } from './modules/lifestyle/lifestyle.routes'
+import prisma from './lib/prisma'
 
 const app = Fastify({ logger: { level: 'warn' } })
 
@@ -56,6 +57,16 @@ app.register(progressRoutes,    { prefix: '/api/progress' })
 app.register(lifestyleRoutes,   { prefix: '/api/lifestyle' })
 
 app.get('/health', async () => ({ status: 'ok' }))
+
+// Keep-alive: ping nhẹ vào DB để Supabase không tự pause sau 7 ngày inactive
+app.get('/health/db', async (_req, reply) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`
+    return reply.send({ status: 'ok', db: 'connected', ts: new Date().toISOString() })
+  } catch (err: any) {
+    return reply.code(503).send({ status: 'error', message: err.message })
+  }
+})
 
 // ─── START ───────────────────────────────────────────────────────────────────
 const start = async () => {
