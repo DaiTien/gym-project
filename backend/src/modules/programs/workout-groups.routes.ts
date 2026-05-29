@@ -75,14 +75,37 @@ export async function workoutGroupRoutes(app: FastifyInstance) {
     '/:id',
     { preHandler: [app.authenticate] },
     async (req, reply) => {
-      const { id: userId } = req.user as { id: string }
-      const group = await prisma.programDay.findUnique({ where: { id: req.params.id } })
-      if (!group) return reply.code(404).send({ error: 'Not found' })
-      if (group.userId !== userId) return reply.code(403).send({ error: 'Không có quyền' })
-      // Xóa dayExercises trước
-      await prisma.dayExercise.deleteMany({ where: { programDayId: req.params.id } })
-      await prisma.programDay.delete({ where: { id: req.params.id } })
-      return reply.code(204).send()
+      try {
+        const { id: userId } = req.user as { id: string }
+        const group = await prisma.programDay.findUnique({ where: { id: req.params.id } })
+        if (!group) return reply.code(404).send({ error: 'Not found' })
+        if (group.userId !== userId) return reply.code(403).send({ error: 'Không có quyền' })
+
+        // Kiểm tra an toàn trước
+        const sessionCount = await prisma.workoutSession.count({ where: { programDayId: req.params.id } })
+        const scheduleCount = await prisma.userProgramSchedule.count({ where: { programDayId: req.params.id } })
+
+        if (sessionCount > 0 || scheduleCount > 0) {
+          return reply.code(400).send({ 
+            error: 'Không thể xoá nhóm tập này vì đang được sử dụng trong lịch tập hoặc đã có lịch sử tập luyện.' 
+          })
+        }
+
+        // Dùng transaction để tránh xóa dayExercise thành công mà programDay thất bại
+        await prisma.$transaction([
+          prisma.dayExercise.deleteMany({ where: { programDayId: req.params.id } }),
+          prisma.programDay.delete({ where: { id: req.params.id } })
+        ])
+
+        return reply.code(204).send()
+      } catch (error: any) {
+        if (error.code === 'P2003') {
+          return reply.code(400).send({ 
+            error: 'Không thể xoá nhóm tập này vì đang được sử dụng trong lịch tập hoặc đã có lịch sử tập luyện.' 
+          })
+        }
+        throw error
+      }
     }
   )
 

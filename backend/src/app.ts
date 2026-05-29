@@ -46,6 +46,8 @@ app.decorate('authenticate', async function (req: any, reply: any) {
   }
 })
 
+import { nutritionRoutes } from './modules/nutrition/nutrition.routes'
+
 // ─── ROUTES ──────────────────────────────────────────────────────────────────
 app.register(authRoutes,        { prefix: '/api/auth' })
 app.register(programRoutes,     { prefix: '/api/programs' })
@@ -55,6 +57,7 @@ app.register(workoutGroupRoutes, { prefix: '/api/workout-groups' })
 app.register(sessionRoutes,     { prefix: '/api/sessions' })
 app.register(progressRoutes,    { prefix: '/api/progress' })
 app.register(lifestyleRoutes,   { prefix: '/api/lifestyle' })
+app.register(nutritionRoutes,   { prefix: '/api/nutrition' })
 
 app.get('/health', async () => ({ status: 'ok' }))
 

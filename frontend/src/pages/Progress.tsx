@@ -122,7 +122,7 @@ export default function Progress() {
       )}
 
       {/* Biểu đồ tiến độ tạ theo bài */}
-      {workoutExercises.length > 0 && (
+      {/* {workoutExercises.length > 0 && (
         <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700">
           <p className="text-slate-400 text-xs uppercase tracking-widest mb-3">Tiến Độ Tạ Theo Bài</p>
           <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
@@ -163,10 +163,10 @@ export default function Progress() {
             </ResponsiveContainer>
           )}
         </div>
-      )}
+      )} */}
 
       {/* Lịch sử buổi tập */}
-      {(weights?.length ?? 0) > 1 && (
+      {/* {(weights?.length ?? 0) > 1 && (
         <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700">
           <p className="text-slate-400 text-xs uppercase tracking-widest mb-3">Lịch Sử Cân Nặng</p>
           <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -180,7 +180,7 @@ export default function Progress() {
             ))}
           </div>
         </div>
-      )}
+      )} */}
     </div>
   )
 }

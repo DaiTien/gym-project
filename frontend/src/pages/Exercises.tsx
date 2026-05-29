@@ -36,7 +36,7 @@ export default function Exercises() {
       setActiveGroup(g)
       setView('detail')
     },
-    onError: () => showToast('Tạo thất bại', 'error'),
+    onError: (err: any) => showToast(err.message || 'Tạo thất bại', 'error'),
   })
 
   const updateGroup = useMutation({
@@ -47,7 +47,7 @@ export default function Exercises() {
       resetGroupForm()
       showToast('Đã cập nhật!')
     },
-    onError: () => showToast('Cập nhật thất bại', 'error'),
+    onError: (err: any) => showToast(err.message || 'Cập nhật thất bại', 'error'),
   })
 
   const deleteGroup = useMutation({
@@ -58,7 +58,7 @@ export default function Exercises() {
       setActiveGroup(null)
       showToast('Đã xóa nhóm')
     },
-    onError: () => showToast('Xóa thất bại', 'error'),
+    onError: (err: any) => showToast(err.message || 'Xóa thất bại', 'error'),
   })
 
   const addExercise = useMutation({
@@ -71,7 +71,7 @@ export default function Exercises() {
       setShowAddExercise(false)
       setExSearch('')
     },
-    onError: () => showToast('Thêm thất bại', 'error'),
+    onError: (err: any) => showToast(err.message || 'Thêm thất bại', 'error'),
   })
 
   const removeExercise = useMutation({
@@ -80,6 +80,7 @@ export default function Exercises() {
       qc.invalidateQueries({ queryKey: ['workout-groups'] })
       showToast('Đã xóa bài tập')
     },
+    onError: (err: any) => showToast(err.message || 'Xóa bài tập thất bại', 'error'),
   })
 
   const resetGroupForm = () => {

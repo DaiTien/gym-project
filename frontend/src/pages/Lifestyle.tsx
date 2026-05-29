@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { lifestyleApi } from '../api/progress'
+import { lifestyleApi, nutritionApi } from '../api/progress'
 import { useToast } from '../components/Toast'
 import TdeeCalculator from '../components/TdeeCalculator'
+import FoodLogModal from '../components/FoodLogModal'
 
 const STEP_GOAL = 7000
 const PROTEIN_GOAL = 120
@@ -19,6 +20,18 @@ export default function Lifestyle() {
   const { data: history } = useQuery({
     queryKey: ['lifestyle-history'],
     queryFn: lifestyleApi.history,
+  })
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const removeLog = useMutation({
+    mutationFn: (id: string) => nutritionApi.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['lifestyle-today'] })
+      qc.invalidateQueries({ queryKey: ['lifestyle-history'] })
+      showToast('Đã xóa món ăn!')
+    },
+    onError: () => showToast('Xóa thất bại', 'error')
   })
 
   const [form, setForm] = useState({
@@ -75,89 +88,51 @@ export default function Lifestyle() {
       <TdeeCalculator />
 
       {/* Progress rings hôm nay */}
-      <div className="grid grid-cols-2 gap-3">
-        <RingCard
-          label="Bước chân"
-          value={form.steps ? Number(form.steps) : (today?.steps ?? 0)}
-          goal={STEP_GOAL}
-          unit="bước"
-          color="#f97316"
-          icon="👟"
-        />
-        <RingCard
-          label="Protein"
-          value={form.proteinG ? Number(form.proteinG) : (today?.proteinG ?? 0)}
-          goal={PROTEIN_GOAL}
-          unit="g"
-          color="#22d3ee"
-          icon="🥩"
-        />
+      <div className="grid grid-cols-4 gap-2">
+        <RingCard label="Kcal" value={today?.caloriesIn ?? 0} goal={2000} unit="" color="#f97316" icon="🔥" />
+        <RingCard label="Pro" value={today?.proteinG ?? 0} goal={120} unit="g" color="#22d3ee" icon="🥩" />
+        <RingCard label="Carb" value={today?.carbG ?? 0} goal={250} unit="g" color="#a3e635" icon="🍚" />
+        <RingCard label="Fat" value={today?.fatG ?? 0} goal={60} unit="g" color="#fbbf24" icon="🥑" />
       </div>
 
-      {/* Form nhập liệu */}
-      {isLoading ? (
-        <div className="text-slate-400 text-center py-8">Đang tải...</div>
-      ) : (
-        <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700 space-y-4">
-          <p className="text-slate-400 text-xs uppercase tracking-widest">Nhật Ký Hôm Nay</p>
-
-          <LogRow
-            icon="👟"
-            label="Bước chân"
-            placeholder="7000"
-            unit="bước"
-            value={form.steps}
-            onChange={(v) => setForm({ ...form, steps: v })}
-            type="number"
-          />
-          <LogRow
-            icon="🌙"
-            label="Giờ ngủ"
-            placeholder="7.5"
-            unit="giờ"
-            value={form.sleepHours}
-            onChange={(v) => setForm({ ...form, sleepHours: v })}
-            type="number"
-            step="0.5"
-          />
-          <LogRow
-            icon="🍽"
-            label="Calo nạp"
-            placeholder="1800"
-            unit="kcal"
-            value={form.caloriesIn}
-            onChange={(v) => setForm({ ...form, caloriesIn: v })}
-            type="number"
-          />
-          <LogRow
-            icon="🥩"
-            label="Protein"
-            placeholder="120"
-            unit="g"
-            value={form.proteinG}
-            onChange={(v) => setForm({ ...form, proteinG: v })}
-            type="number"
-          />
-
-          <div>
-            <label className="text-slate-400 text-xs mb-1 block">📝 Ghi chú</label>
-            <textarea
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              placeholder="Cảm giác hôm nay thế nào..."
-              rows={2}
-              className="w-full bg-slate-700 text-white placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand resize-none"
-            />
-          </div>
-
-          <button
-            onClick={() => save.mutate()}
-            disabled={save.isPending}
-            className="w-full bg-brand text-white font-black py-3 rounded-xl disabled:opacity-50"
+      <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700">
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-slate-400 text-xs uppercase tracking-widest">Thực Đơn Hôm Nay</p>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-brand text-white text-xs font-bold px-3 py-1.5 rounded-lg"
           >
-            {save.isPending ? 'Đang lưu...' : save.isSuccess ? '✓ Đã lưu!' : 'Lưu Nhật Ký'}
+            + AI Phân Tích
           </button>
         </div>
+
+        {(!today?.foodLogs || today.foodLogs.length === 0) ? (
+          <p className="text-center text-slate-500 text-sm py-4">Chưa có món ăn nào hôm nay</p>
+        ) : (
+          <div className="space-y-3">
+            {today.foodLogs.map(log => (
+              <div key={log.id} className="flex flex-col gap-1 pb-3 border-b border-slate-700/50 last:border-0 last:pb-0">
+                <div className="flex justify-between items-start">
+                  <span className="font-bold text-white text-sm">{log.foodName} <span className="text-slate-400 text-xs font-normal">({log.weightG || 0}g)</span></span>
+                  <button onClick={() => removeLog.mutate(log.id)} className="text-slate-500 hover:text-red-400 text-xs">🗑️ Xóa</button>
+                </div>
+                <div className="flex gap-3 text-xs text-slate-300">
+                  <span className="text-brand font-bold">{log.calories} kcal</span>
+                  <span>🥩 {log.protein}g</span>
+                  <span>🍚 {log.carb}g</span>
+                  <span>🥑 {log.fat}g</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {isModalOpen && (
+        <FoodLogModal 
+          onClose={() => setIsModalOpen(false)} 
+          selectedDate={new Date().toISOString().slice(0, 10)} 
+        />
       )}
 
       {/* Quy tắc 23 giờ reminder */}

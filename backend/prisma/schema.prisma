@@ -181,9 +181,26 @@ model DailyLifestyle {
   sleepHours Float?
   caloriesIn Int?
   proteinG   Int?
+  carbG      Int?
+  fatG       Int?
   notes     String?
 
   user User @relation(fields: [userId], references: [id])
+  foodLogs FoodLog[]
 
   @@unique([userId, logDate])
+}
+
+model FoodLog {
+  id               String         @id @default(uuid())
+  dailyLifestyleId String
+  foodName         String
+  weightG          Float?         // Khối lượng ước tính
+  calories         Int
+  protein          Float
+  carb             Float
+  fat              Float
+  createdAt        DateTime       @default(now())
+
+  dailyLifestyle   DailyLifestyle @relation(fields: [dailyLifestyleId], references: [id])
 }

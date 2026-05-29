@@ -11,6 +11,7 @@ export async function lifestyleRoutes(app: FastifyInstance) {
       const date = req.query.date ?? new Date().toISOString().slice(0, 10)
       const log = await prisma.dailyLifestyle.findUnique({
         where: { userId_logDate: { userId, logDate: new Date(date) } },
+        include: { foodLogs: { orderBy: { createdAt: 'desc' } } },
       })
       return reply.send(log ?? null)
     }

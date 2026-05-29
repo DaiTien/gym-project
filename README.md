@@ -127,6 +127,18 @@ NODE_ENV       = production
 >
 > Lấy tại: Supabase → Connect → Direct → kéo xuống "Connection pooling" → Transaction pooler
 
+### Chống ngủ đông (Keep-alive) cho Free Tier
+
+Render Free Tier sẽ tự động "sleep" sau 15 phút không có request. Ngoài ra, Supabase cũng sẽ tự động "pause" database sau 7 ngày nếu không có query nào được thực thi.
+
+Để giải quyết **cả 2 vấn đề cùng lúc**, source code đã cung cấp sẵn một API Endpoint tại: `GET /health/db` (endpoint này vừa nhận request HTTP để giữ Render tỉnh, vừa thực hiện `SELECT 1` để giữ Supabase active).
+
+**Cách thiết lập (Không cần code thêm):**
+1. Đăng ký tài khoản miễn phí tại [cron-job.org](https://cron-job.org/) (hoặc UptimeRobot).
+2. Tạo một cron job gọi **GET** định kỳ mỗi **10 - 14 phút** vào URL sau:
+   `https://gym-project-backend-yek1.onrender.com/health/db`
+3. Lưu lại. Từ nay ứng dụng của bạn sẽ phản hồi tức thì 24/7 và DB không bao giờ bị pause.
+
 ### Frontend → Vercel
 
 | Setting | Value |
