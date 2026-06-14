@@ -20,8 +20,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...options,
     headers,
   })
-  const data = await res.json()
-  if (!res.ok) throw new Error(data.error || 'Request failed')
+  const data = res.status !== 204 ? await res.json() : null
+  if (!res.ok) throw new Error(data?.error || 'Request failed')
   return data as T
 }
 

@@ -46,11 +46,19 @@ export default function FoodLogModal({ onClose, selectedDate }: { onClose: () =>
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      setImagePreview(event.target?.result as string)
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    img.onload = () => {
+      const MAX = 800
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width * scale
+      canvas.height = img.height * scale
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+      setImagePreview(canvas.toDataURL('image/jpeg', 0.8))
+      URL.revokeObjectURL(objectUrl)
     }
-    reader.readAsDataURL(file)
+    img.src = objectUrl
   }
 
   const handleSaveAll = async () => {
@@ -146,44 +154,43 @@ export default function FoodLogModal({ onClose, selectedDate }: { onClose: () =>
               <p className="text-sm text-green-400 font-bold">✓ AI đã phân tích xong. Vui lòng kiểm tra lại:</p>
               {analyzedItems.map((item, idx) => (
                 <div key={idx} className="bg-slate-800 rounded-xl p-3 border border-slate-700 space-y-3">
-                  <input 
+                  <input
                     className="w-full bg-transparent font-bold text-white focus:outline-none border-b border-slate-700 pb-1"
                     value={item.foodName}
                     onChange={(e) => {
-                      const newItems = [...analyzedItems]
-                      newItems[idx].foodName = e.target.value
-                      setAnalyzedItems(newItems)
+                      const val = e.target.value
+                      setAnalyzedItems(prev => prev.map((it, i) => i === idx ? { ...it, foodName: val } : it))
                     }}
                   />
                   <div className="grid grid-cols-5 gap-2 text-center text-xs">
                     <div>
                       <label className="text-slate-400 block mb-1">Gram</label>
                       <input type="number" className="w-full bg-slate-700 rounded p-1 text-center" value={item.weightG || 0} onChange={e => {
-                        const newItems = [...analyzedItems]; newItems[idx].weightG = Number(e.target.value); setAnalyzedItems(newItems)
+                        const val = Number(e.target.value); setAnalyzedItems(prev => prev.map((it, i) => i === idx ? { ...it, weightG: val } : it))
                       }}/>
                     </div>
                     <div>
                       <label className="text-slate-400 block mb-1">Kcal</label>
                       <input type="number" className="w-full bg-slate-700 rounded p-1 text-center text-brand font-bold" value={item.calories || 0} onChange={e => {
-                        const newItems = [...analyzedItems]; newItems[idx].calories = Number(e.target.value); setAnalyzedItems(newItems)
+                        const val = Number(e.target.value); setAnalyzedItems(prev => prev.map((it, i) => i === idx ? { ...it, calories: val } : it))
                       }}/>
                     </div>
                     <div>
                       <label className="text-slate-400 block mb-1">Pro</label>
                       <input type="number" className="w-full bg-slate-700 rounded p-1 text-center" value={item.protein || 0} onChange={e => {
-                        const newItems = [...analyzedItems]; newItems[idx].protein = Number(e.target.value); setAnalyzedItems(newItems)
+                        const val = Number(e.target.value); setAnalyzedItems(prev => prev.map((it, i) => i === idx ? { ...it, protein: val } : it))
                       }}/>
                     </div>
                     <div>
                       <label className="text-slate-400 block mb-1">Carb</label>
                       <input type="number" className="w-full bg-slate-700 rounded p-1 text-center" value={item.carb || 0} onChange={e => {
-                        const newItems = [...analyzedItems]; newItems[idx].carb = Number(e.target.value); setAnalyzedItems(newItems)
+                        const val = Number(e.target.value); setAnalyzedItems(prev => prev.map((it, i) => i === idx ? { ...it, carb: val } : it))
                       }}/>
                     </div>
                     <div>
                       <label className="text-slate-400 block mb-1">Fat</label>
                       <input type="number" className="w-full bg-slate-700 rounded p-1 text-center" value={item.fat || 0} onChange={e => {
-                        const newItems = [...analyzedItems]; newItems[idx].fat = Number(e.target.value); setAnalyzedItems(newItems)
+                        const val = Number(e.target.value); setAnalyzedItems(prev => prev.map((it, i) => i === idx ? { ...it, fat: val } : it))
                       }}/>
                     </div>
                   </div>

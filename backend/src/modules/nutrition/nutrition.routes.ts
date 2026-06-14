@@ -26,16 +26,16 @@ Mỗi món ăn có định dạng chính xác như sau:
 KHÔNG BAO GỒM markdown hay \`\`\`json. Chỉ trả về mảng JSON hợp lệ. Ví dụ: [{"foodName": "Cơm trắng", "weightG": 200, "calories": 260, "protein": 5, "carb": 56, "fat": 0.5}]
 ${text ? `\nGhi chú thêm từ người dùng: ${text}` : ''}`
 
-      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`
+      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`
 
       try {
         const parts: any[] = [{ text: promptText }]
-        
+
         if (imageBase64) {
           const base64Content = imageBase64.replace(/^data:image\/\w+;base64,/, '')
           const mimeTypeMatch = imageBase64.match(/^data:(image\/\w+);base64,/)
           const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : 'image/jpeg'
-          
+
           parts.push({
             inline_data: { mime_type: mimeType, data: base64Content }
           })
@@ -47,7 +47,8 @@ ${text ? `\nGhi chú thêm từ người dùng: ${text}` : ''}`
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts }]
+            contents: [{ parts }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 1024 }
           })
         })
 
@@ -82,25 +83,17 @@ ${text ? `\nGhi chú thêm từ người dùng: ${text}` : ''}`
 
   // Hàm helper để update tổng DailyLifestyle
   async function updateDailyMacros(dailyLifestyleId: string) {
-    const logs = await prisma.foodLog.findMany({ where: { dailyLifestyleId } })
-    const totals = logs.reduce(
-      (acc, log) => {
-        acc.caloriesIn += log.calories
-        acc.proteinG += log.protein
-        acc.carbG += log.carb
-        acc.fatG += log.fat
-        return acc
-      },
-      { caloriesIn: 0, proteinG: 0, carbG: 0, fatG: 0 }
-    )
-    
+    const agg = await prisma.foodLog.aggregate({
+      where: { dailyLifestyleId },
+      _sum: { calories: true, protein: true, carb: true, fat: true }
+    })
     await prisma.dailyLifestyle.update({
       where: { id: dailyLifestyleId },
       data: {
-        caloriesIn: Math.round(totals.caloriesIn),
-        proteinG: Math.round(totals.proteinG),
-        carbG: Math.round(totals.carbG),
-        fatG: Math.round(totals.fatG),
+        caloriesIn: Math.round(agg._sum.calories ?? 0),
+        proteinG: Math.round(agg._sum.protein ?? 0),
+        carbG: Math.round(agg._sum.carb ?? 0),
+        fatG: Math.round(agg._sum.fat ?? 0),
       },
     })
   }
